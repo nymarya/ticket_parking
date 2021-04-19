@@ -1,0 +1,38 @@
+/* ticket_machine_i
+ * Author: 
+ * Creation date: 19/04/21
+ */
+
+IMPLEMENTATION ticket_machine_i
+REFINES ticket_machine
+VALUES
+    MAX_TICKET = 10; MAX_HOUR = 168
+    
+CONCRETE_VARIABLES ticket_i, hour_i
+    
+INVARIANT
+    ticket_i : 0..MAX_TICKET --> {available, parked} 
+    & hour_i : 0..MAX_TICKET --> 0..MAX_HOUR
+    & dom(ticket_i |> {available}) <: dom(hour_i |> {0}) 
+OPERATIONS
+    inchour(tt) =
+        BEGIN
+            hour_i(tt) := hour_i(tt) + 1
+        END;
+            
+    park(tt) = 
+        BEGIN
+            END;
+        
+    vv <-- calculate(tt) = 
+        BEGIN
+        END;
+
+    // pagamento(valor)
+    // valor tem que ser maior ou igual ao que pagar
+    // saída é o troco
+    // libera o cartão para saída
+    tr <-- pay(vv, tt) = 
+        BEGIN
+        END
+ END
