@@ -8,24 +8,65 @@ REFINES ticket_machine
 VALUES
     MAX_TICKET = 10; MAX_HOUR = 168
     
-CONCRETE_VARIABLES ticket_i, hour_i
-    
+CONCRETE_VARIABLES ticket_i, hour_i, value_i, aa_i
+
 INVARIANT
-    ticket_i : 0..MAX_TICKET --> {available, parked} 
+    ticket_i : 0..MAX_TICKET --> BOOL //true -> available, false -> parked
     & hour_i : 0..MAX_TICKET --> 0..MAX_HOUR
-    & dom(ticket_i |> {available}) <: dom(hour_i |> {0}) 
+    & value_i : 0..MAX_TICKET --> 0..(10 + (MAX_HOUR -3 ) * 3)
+    & dom(ticket_i |> {TRUE}) <: dom(hour_i |> {0}) 
+    & aa_i : 0..MAX_HOUR
+    
+INITIALISATION 
+    VAR xx IN
+        xx := 0; 
+        WHILE xx <= MAX_TICKET 
+        DO
+           ticket_i(xx) := TRUE;
+           hour_i(xx) := 0;
+           value_i(xx) := 0;
+           aa_i := 0;
+           xx := xx + 1
+        INVARIANT  
+            !nn . (nn:0..(xx-1) => 
+                    (ticket_i(nn) = TRUE & 
+                        hour_i(nn) = 0 & 
+                        value_i(nn) = 0 & 
+                        aa_i = 0))
+        VARIANT (MAX_TICKET - xx)
+        END
+    END
+   //ticket_i, hour_i, value_i := (0..MAX_TICKET)*{available}, (0..MAX_TICKET)*{0}, (0..MAX_TICKET)*{0}    
+
 OPERATIONS
     inchour(tt) =
         BEGIN
-            hour_i(tt) := hour_i(tt) + 1
+            hour_i(tt) := hour_i(tt) + 1;
+            aa_i := hour_i(tt);
+            IF aa_i <= 1 THEN value_i(tt) :=  7
+             ELSIF 1 < aa_i & aa_i <= 3 THEN value_i(tt) := 7 + hour_i(tt)
+             ELSE value_i(tt) := 10 + (hour_i(tt) - 3) * 3
+             END
         END;
             
     park(tt) = 
         BEGIN
+            ticket_i(tt) := FALSE
             END;
         
     vv <-- calculate(tt) = 
         BEGIN
+            vv := value_i(tt)
+        END;
+        
+    ss <-- status(tt) = 
+        BEGIN 
+            ss := ticket_i(tt)
+        END;
+    
+    hh <-- time(tt) = 
+        BEGIN
+            hh := hour_i(tt)
         END;
 
     // pagamento(valor)
@@ -34,5 +75,9 @@ OPERATIONS
     // libera o cartão para saída
     tr <-- pay(vv, tt) = 
         BEGIN
+            tr := vv - value_i(tt);
+            ticket_i(tt) := TRUE;
+            hour_i(tt) := 0;
+            value_i(tt) := 0
         END
  END
